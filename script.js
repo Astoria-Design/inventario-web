@@ -18,7 +18,7 @@ function submitData() {
 
     if (data.length > 0) {
         // Llamada AJAX para enviar los datos al backend de Google Apps Script
-        fetch('https://script.google.com/macros/u/2/s/AKfycbzbsYTfyidqy-xi6BPxW546cszXQGPvshcy6B1Yv60oUQjwj8w0Fh_Sabba1D6WxHL43w/exec', {
+        fetch('https://script.google.com/macros/s/AKfycbzyEQRm0LRjTrU-1TNArKvlC5SUXT3Aeiht5ix3m3PTYto8UWebEY0yZhJVN0AubgQBNg/exec', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -32,4 +32,5 @@ function submitData() {
         alert("Por favor ingrese cantidades para al menos un producto.");
     }
 }
+
 
