@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Inventario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        input[type="number"] {
+            width: 100px;
+            padding: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .add-product {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .add-product input {
+            width: 45%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Inventario</h1>
+        <form id="productForm">
+            <table id="productTable">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Unidad</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Los productos se agregarán dinámicamente aquí -->
+                </tbody>
+            </table>
+            <div class="add-product">
+                <input type="text" id="newProduct" placeholder="Nuevo Producto" />
+                <input type="text" id="newUnit" placeholder="Unidad de Medida" />
+                <button type="button" onclick="addNewProduct()">Agregar Producto</button>
+            </div>
+            <button type="button" onclick="submitData()">Registrar Cantidades</button>
+        </form>
+    </div>
+
+    <script>
+        const products = [];
+
+        // Cargar los productos de Google Sheets
+        function loadProducts() {
+            // Llamada a Google Apps Script para obtener productos fijos
+            google.script.run.withSuccessHandler(function(productsList) {
+                productsList.forEach((product, index) => {
+                    addProductRow(product.name, product.unit, index);
+                });
+            }).getProductsFromSheet();
+        }
+
+        // Mostrar productos fijos en la tabla
+        function addProductRow(name, unit, index) {
+            const tableBody = document.querySelector("#productTable tbody");
+            const row = document.createElement("tr");
+
+            // Descripción
+            const productCell = document.createElement("td");
+            productCell.textContent = name;
+            row.appendChild(productCell);
+
+            // Unidad
+            const unitCell = document.createElement("td");
+            unitCell.textContent = unit;
+            row.appendChild(unitCell);
+
+            // Campo de cantidad
+            const quantityCell = document.createElement("td");
+            const quantityInput = document.createElement("input");
+            quantityInput.type = "number";
+            quantityInput.id = "quantity-" + index;
+            quantityInput.min = 0;
+            quantityCell.appendChild(quantityInput);
+            row.appendChild(quantityCell);
+
+            // Agregar fila a la tabla
+            tableBody.appendChild(row);
+        }
+
+        // Función para agregar un nuevo producto
+        function addNewProduct() {
+            const newProduct = document.getElementById("newProduct").value;
+            const newUnit = document.getElementById("newUnit").value;
+
+            if (newProduct && newUnit) {
+                products.push({ name: newProduct, unit: newUnit });
+                addProductRow(newProduct, newUnit, products.length - 1);
+
+                // Limpiar campos de entrada
+                document.getElementById("newProduct").value = "";
+                document.getElementById("newUnit").value = "";
+            }
+        }
+
+        // Función para enviar los datos a Google Sheets
+        function submitData() {
+            const data = [];
+            const today = new Date().toLocaleDateString(); // Fecha de hoy
+
+            // Obtener las cantidades de los productos
+            products.forEach((product, index) => {
+                const quantity = document.getElementById("quantity-" + index).value;
+                if (quantity > 0) {
+                    data.push({
+                        name: product.name,
+                        unit: product.unit,
+                        quantity: quantity,
+                        date: today
+                    });
+                }
+            });
+
+            if (data.length > 0) {
+                // Enviar los datos a Google Apps Script
+                google.script.run.addInventoryData(data);
+                alert("Productos registrados exitosamente.");
+            } else {
+                alert("Por favor ingrese cantidades para al menos un producto.");
+            }
+        }
+
+        // Cargar los productos cuando se cargue la página
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>
