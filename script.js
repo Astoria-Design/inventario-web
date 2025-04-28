@@ -1,58 +1,4 @@
-const products = [];
-
-// Cargar los productos de Google Sheets
-function loadProducts() {
-    google.script.run.withSuccessHandler(function(productsList) {
-        productsList.forEach((product, index) => {
-            addProductRow(product.name, product.unit, index);
-        });
-    }).getProductsFromSheet();
-}
-
-// Mostrar productos fijos en la tabla
-function addProductRow(name, unit, index) {
-    const tableBody = document.querySelector("#productTable tbody");
-    const row = document.createElement("tr");
-
-    // Descripción
-    const productCell = document.createElement("td");
-    productCell.textContent = name;
-    row.appendChild(productCell);
-
-    // Unidad
-    const unitCell = document.createElement("td");
-    unitCell.textContent = unit;
-    row.appendChild(unitCell);
-
-    // Campo de cantidad
-    const quantityCell = document.createElement("td");
-    const quantityInput = document.createElement("input");
-    quantityInput.type = "number";
-    quantityInput.id = "quantity-" + index;
-    quantityInput.min = 0;
-    quantityCell.appendChild(quantityInput);
-    row.appendChild(quantityCell);
-
-    // Agregar fila a la tabla
-    tableBody.appendChild(row);
-}
-
-// Función para agregar un nuevo producto
-function addNewProduct() {
-    const newProduct = document.getElementById("newProduct").value;
-    const newUnit = document.getElementById("newUnit").value;
-
-    if (newProduct && newUnit) {
-        products.push({ name: newProduct, unit: newUnit });
-        addProductRow(newProduct, newUnit, products.length - 1);
-
-        // Limpiar campos de entrada
-        document.getElementById("newProduct").value = "";
-        document.getElementById("newUnit").value = "";
-    }
-}
-
-// Función para enviar los datos a Google Sheets
+// Función para enviar los datos a Google Apps Script
 function submitData() {
     const data = [];
     const today = new Date().toLocaleDateString(); // Fecha de hoy
@@ -71,13 +17,19 @@ function submitData() {
     });
 
     if (data.length > 0) {
-        // Enviar los datos a Google Apps Script
-        google.script.run.addInventoryData(data);
-        alert("Productos registrados exitosamente.");
+        // Llamada AJAX para enviar los datos al backend de Google Apps Script
+        fetch('https://script.google.com/macros/u/2/s/AKfycbzbsYTfyidqy-xi6BPxW546cszXQGPvshcy6B1Yv60oUQjwj8w0Fh_Sabba1D6WxHL43w/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Datos enviados correctamente:', data);
+        })
+        .catch(error => console.error('Error:', error));
     } else {
         alert("Por favor ingrese cantidades para al menos un producto.");
     }
 }
 
-// Cargar los productos cuando se cargue la página
-window.onload = loadProducts;
